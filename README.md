@@ -3,11 +3,11 @@ cbd
 
 tiny clipboard
 
-##cbc
+> $ cbs # starting the server
 
-> $ echo "hello world" | cbc s
+> $ echo "hello world" | cbc s # sending the buffer
 
-> $ cbc r
+> $ cbc r # reading it back
 
 > hello world
 
