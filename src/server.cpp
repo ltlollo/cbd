@@ -2,6 +2,8 @@
 #include <mutex>
 #include "common.h"
 
+static const char* globpath;
+
 void job(file::Socket&& ms, std::vector<char>& buf, std::mutex& m) {
     try {
         std::lock_guard<std::mutex> lock(m);
@@ -23,19 +25,18 @@ void job(file::Socket&& ms, std::vector<char>& buf, std::mutex& m) {
     }
 }
 
-
 class Server {
     std::mutex m;
     file::Socket sock;
     file::Bind sockbind;
     std::vector<char> buf;
 public:
-    Server() : sock{}, sockbind("/tmp/.cb-sock", sock) {
+    Server() : sock{}, sockbind(globpath, sock) {
         err::donotfail_errno("sigaction", ansi::signal, ansi::sigint,
-                             [](int, siginfo_t*, void*){
-            ansi::unlink("/tmp/.cb-sock");
-            ansi::exit(0);
-        });
+                             [&](int, siginfo_t*, void*) {
+                                     ansi::unlink(globpath);
+                                     ansi::exit(0);
+                                 });
     }
     [[ noreturn ]] void run() {
         sock.listen();
@@ -47,11 +48,12 @@ public:
 
 int main(int argc, char *argv[]) {
     const auto print_help = [&]() {
-        printf("USAGE:\t%s\n"
+        printf("USAGE:\t%s [path]\n"
+               "\tpath<string>: socket path (defaults: /tmp/.cb-sock)\n"
                "SCOPE: send and receve buffers on request\n",
                argv[0]);
     };
-    if (argc > 1) {
+    if (argc > 2) {
         print_help();
         return 1;
     }
@@ -59,6 +61,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     try {
+        globpath = argc > 1 ? argv[1] : "/tmp/.cb-sock";
         Server().run();
     } catch (std::runtime_error& e) {
         printf("%s\n", e.what());
