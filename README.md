@@ -1,6 +1,8 @@
 cbd
 =====
 
+tiny clipboard
+
 ##cbc
 
 > $ echo "hello world" | cbc s
