@@ -53,6 +53,10 @@ int main(int argc, char *argv[]) {
                "SCOPE: send and receve buffers on request\n",
                argv[0]);
     };
+    if (argc == 2 && argv[1] == std::string("-h")) {
+        print_help();
+        return 0;
+    }
     if (argc > 2) {
         print_help();
         return 1;
