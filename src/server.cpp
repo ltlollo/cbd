@@ -1,12 +1,9 @@
-#include <thread>
-#include <mutex>
 #include "common.h"
 
 static const char* globpath;
 
-void job(file::Socket&& ms, std::vector<char>& buf, std::mutex& m) {
+void job(file::Socket&& ms, std::vector<char>& buf) {
     try {
-        std::lock_guard<std::mutex> lock(m);
         file::Socket sock{std::move(ms)};
         sock.time(5);
         auto action = sock.recv<common::Action>();
@@ -26,7 +23,6 @@ void job(file::Socket&& ms, std::vector<char>& buf, std::mutex& m) {
 }
 
 class Server {
-    std::mutex m;
     file::Socket sock;
     file::Bind sockbind;
     std::vector<char> buf;
@@ -39,9 +35,9 @@ public:
                                  });
     }
     [[ noreturn ]] void run() {
-        sock.listen();
+        sock.listen(1);
         fun::loop([&](){
-            std::thread(job, sock.clone(), ref(buf), ref(m)).detach();
+            job(sock.clone(), ref(buf));
         });
     }
 };
