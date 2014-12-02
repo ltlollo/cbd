@@ -4,7 +4,7 @@
 #include "common.h"
 
 int main(int argc, char *argv[]) {
-    const auto print_help = [&]() {
+    auto print_help = [&]() {
         std::cerr << "USAGE:\t" << argv[0]
                   << " action [path]\n"
                      "\taction<string>: s|r|w\n"
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     }
     file::Socket sock;
     auto spath = std::string(argc > 2 ? argv[2] : "/tmp/.cb-sock");
-    if (action == common::Action::Set) {
+    auto sendmsg = [&]() {
         std::cin >> std::noskipws;
         std::istream_iterator<char> begin(std::cin), end;
         auto input = std::vector<char>(begin, end);
@@ -39,15 +39,21 @@ int main(int argc, char *argv[]) {
         sock.send(input.size());
         sock.send(input);
         sock.recv<common::Done>();
-    } else {
+    };
+    auto recvmsg = [&]() {
         sock.connect(spath);
         sock.send(action);
         auto size = sock.recv<size_t>();
-        if (!size) { return 0; }
+        if (!size) { return; }
         err::doreturn("exceded size", size > msg::maxsize);
         auto buf = sock.recv<std::vector<char>>(size);
         std::ostream_iterator<char> out (std::cout);
         std::copy(begin(buf), end(buf), out);
+    };
+    if (action == common::Action::Set) {
+        sendmsg();
+    } else {
+        recvmsg();
     }
     return 0;
 }
