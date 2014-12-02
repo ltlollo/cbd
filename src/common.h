@@ -6,6 +6,7 @@
 namespace common {
 
 enum Action { Set, Get };
+using Done = bool;
 
 } // end of namespace common
 

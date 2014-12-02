@@ -30,15 +30,18 @@ int main(int argc, char *argv[]) {
     }
     file::Socket sock;
     auto spath = std::string(argc > 2 ? argv[2] : "/tmp/.cb-sock");
-    sock.connect(spath);
-    sock.send(action);
     if (action == common::Action::Set) {
         std::cin >> std::noskipws;
         std::istream_iterator<char> begin(std::cin), end;
         auto input = std::vector<char>(begin, end);
+        sock.connect(spath);
+        sock.send(action);
         sock.send(input.size());
         sock.send(input);
+        sock.recv<common::Done>();
     } else {
+        sock.connect(spath);
+        sock.send(action);
         auto size = sock.recv<size_t>();
         if (!size) { return 0; }
         err::doreturn("exceded size", size > msg::maxsize);

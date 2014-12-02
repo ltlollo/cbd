@@ -16,6 +16,7 @@ void job(file::Socket&& ms, std::vector<char>& buf) {
             auto size = sock.recv<std::size_t>();
             err::doreturn("exceded size", size > msg::maxsize);
             buf = sock.recv<std::vector<char>>(size);
+            sock.send(common::Done{});
         }
     } catch (std::exception& e) {
         printf("%s", e.what());
@@ -30,9 +31,9 @@ public:
     Server() : sock{}, sockbind(globpath, sock) {
         err::donotfail_errno("sigaction", ansi::signal, ansi::sigint,
                              [&](int, siginfo_t*, void*) {
-                                     ansi::unlink(globpath);
-                                     ansi::exit(0);
-                                 });
+            ansi::unlink(globpath);
+            ansi::exit(0);
+        });
     }
     [[ noreturn ]] void run() {
         sock.listen(1);
@@ -41,7 +42,6 @@ public:
         });
     }
 };
-
 int main(int argc, char *argv[]) {
     const auto print_help = [&]() {
         printf("USAGE:\t%s [path]\n"
